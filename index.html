@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Giusy Grieco — dati, storie, mappe, progetti europei</title>
+<meta name="description" content="Giusy Grieco: Work Package Lead in Horizon Europe, Digital Humanities e New Media Art. Candidatura per Cityopensource.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='13' r='7' fill='%232F5BEA'/><path d='M16 30 L10 18 H22 Z' fill='%232F5BEA'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --paper:#EEF1EC;      /* carta topografica */
+  --paper-2:#E1E7DF;
+  --ink:#14213D;        /* inchiostro cartografico */
+  --ink-soft:#43506B;
+  --route:#2F5BEA;      /* il percorso */
+  --highlight:#F2C230;  /* evidenziatore */
+  --contour:#5E8C6A;    /* curve di livello */
+  --white:#FFFFFF;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --wrap:1180px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.55}
+img,svg{max-width:100%}
+a{color:var(--route)}
+a:hover{color:var(--ink)}
+:focus-visible{outline:3px solid var(--highlight);outline-offset:3px;border-radius:4px}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 32px}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-0.02em;line-height:1.05;margin:0}
+h2{font-size:clamp(34px,4.4vw,52px)}
+h3{font-size:24px;letter-spacing:-0.01em}
+p{margin:0}
+.lead{font-size:clamp(19px,2vw,22px);color:var(--ink-soft);max-width:62ch}
+.btn{display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 26px;border-radius:999px;font-weight:700;text-decoration:none;font-size:17px}
+.btn-solid{background:var(--ink);color:var(--white)}
+.btn-solid:hover{background:var(--route);color:var(--white)}
+.btn-line{border:2px solid var(--ink);color:var(--ink)}
+.btn-line:hover{background:var(--ink);color:var(--white)}
+.btn svg{width:20px;height:20px;flex-shrink:0}
+
+/* ---------- top bar ---------- */
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:22px 0;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:700;font-size:20px;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:10px}
+.brand svg{width:26px;height:26px}
+.nav{display:flex;gap:22px;flex-wrap:wrap}
+.nav a{color:var(--ink);text-decoration:none;font-weight:700;font-size:16px;padding:6px 0;border-bottom:2px solid transparent}
+.nav a:hover{border-bottom-color:var(--route)}
+
+/* ---------- hero ---------- */
+.hero{padding:56px 0 40px}
+.hero h1{font-size:clamp(46px,7vw,92px);max-width:14ch}
+.hero .lead{margin-top:26px}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:32px}
+
+/* pipeline: the memorable element */
+.pipeline{margin:64px 0 0;background:var(--white);border-radius:24px;padding:36px 28px 30px;position:relative;overflow:hidden}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;position:relative}
+.route{position:absolute;left:0;top:0;width:100%;height:92px;z-index:0}
+.route path{fill:none;stroke:var(--route);stroke-width:4;stroke-linecap:round;stroke-dasharray:10 10;vector-effect:non-scaling-stroke}
+.step{position:relative;z-index:1;align-items:center;text-align:center}
+.node{width:92px;height:92px;border-radius:50%;background:var(--paper);display:flex;align-items:center;justify-content:center;margin-bottom:10px;border:4px solid var(--white)}
+.node svg{width:42px;height:42px;color:var(--ink)}
+.node-end{background:var(--highlight)}
+.step{display:flex;flex-direction:column;gap:6px}
+.step b{font-family:var(--display);font-size:24px}
+.step span{font-size:16px;color:var(--ink-soft)}
+
+/* ---------- sections ---------- */
+section{padding:88px 0}
+.section-head{display:flex;flex-direction:column;gap:16px;margin-bottom:40px;max-width:760px}
+.band{background:var(--ink);color:var(--white)}
+.band .lead{color:#C9D1E4}
+.band a{color:var(--highlight)}
+
+/* ---------- map ---------- */
+.map-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:28px;align-items:stretch}
+#map{height:560px;border-radius:20px;background:var(--paper-2);z-index:0}
+.map-fallback{padding:24px;color:var(--ink)}
+.story{background:var(--white);color:var(--ink);border-radius:20px;padding:30px;display:flex;flex-direction:column;gap:14px;min-height:560px}
+.story-kind{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:15px;align-self:flex-start;padding:6px 14px;border-radius:999px}
+.story h3{font-size:34px}
+.story .when{color:var(--ink-soft);font-weight:700}
+.story .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.story .tags span{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--paper)}
+.legend{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px;font-size:16px}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.dot{width:16px;height:16px;border-radius:50%;display:inline-block;border:3px solid var(--white)}
+.k-eu{background:var(--route)} .k-comm{background:var(--highlight)} .k-root{background:var(--contour)}
+.place-list{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.place-list button{font:inherit;font-size:16px;font-weight:700;min-height:44px;padding:0 16px;border-radius:999px;border:2px solid #3B4A6B;background:transparent;color:var(--white);cursor:pointer}
+.place-list button[aria-pressed="true"]{background:var(--white);color:var(--ink);border-color:var(--white)}
+.pin{width:26px;height:26px;border-radius:50%;border:4px solid var(--white);box-shadow:0 0 0 2px var(--ink)}
+.pin.is-active{width:34px;height:34px;box-shadow:0 0 0 3px var(--ink),0 0 0 9px rgba(47,91,234,.25)}
+.leaflet-div-icon{background:transparent;border:none}
+
+/* ---------- project management ---------- */
+.gantt{background:var(--white);border-radius:20px;padding:28px}
+.g-row{display:grid;grid-template-columns:230px minmax(0,1fr);align-items:center;gap:16px;min-height:62px;border-bottom:1px solid var(--paper-2)}
+.g-row:last-child{border-bottom:none}
+.g-name b{display:block;font-size:17px}
+.g-name small{color:var(--ink-soft);font-size:15px}
+.g-track{position:relative;height:30px;background:repeating-linear-gradient(90deg,var(--paper-2) 0 1px,transparent 1px calc(100%/6))}
+.g-bar{position:absolute;top:3px;height:24px;border-radius:6px}
+.g-years{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));font-weight:700;font-size:15px;color:var(--ink-soft)}
+.g-head{border-bottom:2px solid var(--ink);min-height:40px}
+
+.wp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:40px;position:relative}
+.wp-step{background:var(--white);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:12px;position:relative}
+.wp-step .ico{width:52px;height:52px;border-radius:14px;background:var(--paper);display:flex;align-items:center;justify-content:center}
+.wp-step .ico svg{width:28px;height:28px}
+.wp-step p{font-size:16px;color:var(--ink-soft)}
+.wp-step:not(:last-child)::after{content:"";position:absolute;right:-18px;top:50px;width:18px;height:4px;background:var(--route)}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dots i{width:14px;height:14px;border-radius:50%;background:var(--route);display:block}
+.dots i.pale{background:var(--paper-2)}
+
+/* ---------- what I bring ---------- */
+.bring{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.bring-card{border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:14px;background:var(--white)}
+.bring-card .ico{width:56px;height:56px}
+.bring-card p{font-size:17px;color:var(--ink-soft)}
+.cefr{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.cefr-row{display:grid;grid-template-columns:92px minmax(0,1fr) 34px;align-items:center;gap:10px;font-size:15px}
+.cefr-bar{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+.cefr-bar i{height:12px;border-radius:3px;background:var(--paper-2);display:block}
+.cefr-bar i.on{background:var(--route)}
+
+/* ---------- outputs ---------- */
+.outs{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+.out{display:flex;gap:16px;align-items:flex-start;padding:22px;border-radius:18px;background:var(--white);text-decoration:none;color:var(--ink);border:2px solid transparent}
+.out:hover{border-color:var(--route);color:var(--ink)}
+.out svg{width:34px;height:34px;flex-shrink:0;margin-top:2px}
+.out b{display:block;font-size:17px;line-height:1.3}
+.out small{display:block;color:var(--ink-soft);font-size:15px;margin-top:6px;word-break:break-word}
+
+/* ---------- CV download ---------- */
+.cv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:40px;align-items:center;background:var(--highlight);border-radius:28px;padding:48px}
+.cv h2{font-size:clamp(32px,4vw,46px)}
+.cv p{margin-top:14px;max-width:52ch;font-size:18px}
+.cv-doc{width:150px;height:190px;background:var(--white);border-radius:10px;box-shadow:10px 10px 0 var(--ink);padding:18px;display:flex;flex-direction:column;gap:8px}
+.cv-doc i{display:block;height:7px;border-radius:4px;background:var(--paper-2)}
+.cv-doc i.h{height:12px;width:70%;background:var(--ink)}
+.cv-doc i.b{background:var(--route);width:45%}
+.cv-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:26px}
+
+/* ---------- footer ---------- */
+footer{padding:72px 0 64px}
+.foot{display:flex;justify-content:space-between;align-items:flex-end;gap:32px;flex-wrap:wrap}
+.foot h2{max-width:14ch}
+.contacts{display:flex;flex-direction:column;gap:10px;font-size:17px}
+.contacts a{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-weight:700}
+.contacts svg{width:20px;height:20px}
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  .map-grid{grid-template-columns:1fr}
+  #map{height:420px}
+  .story{min-height:0}
+  .wp{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .wp-step::after{display:none}
+  .bring{grid-template-columns:1fr}
+  .cv{grid-template-columns:1fr;padding:32px}
+  .cv-doc{display:none}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:22px}
+  .route{display:none}
+  .g-row{grid-template-columns:130px minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .wrap{padding:0 20px}
+  .wp{grid-template-columns:1fr}
+  .nav{display:none}
+  .route{display:none}
+  .steps{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ SVG icon sprite ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-data" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></symbol>
+    <symbol id="i-story" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h11a3 3 0 0 1 3 3v12H7a3 3 0 0 1-3-3z"/><path d="M18 8h2v12"/><path d="M8 9h6M8 13h6M8 17h3"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-12a7 7 0 0 1 14 0c0 5.7-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0M13.5 20a4 4 0 0 1 8 0"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.8 3.8 5.8 3.8 9s-1.3 6.2-3.8 9c-2.5-2.8-3.8-5.8-3.8-9S9.5 5.8 12 3z"/></symbol>
+    <symbol id="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#top" aria-label="Giusy Grieco, inizio pagina"><svg aria-hidden="true" style="color:var(--route)"><use href="#i-pin"/></svg>Giusy Grieco</a>
+    <nav class="nav" aria-label="Sezioni">
+      <a href="#mappa">Mappa</a>
+      <a href="#progetti">Progetti</a>
+      <a href="#output">Output</a>
+      <a href="#cv">CV</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <div class="hero">
+      <h1>Dai dati alle storie, dalle storie alle mappe, dalle mappe ai progetti europei.</h1>
+      <p class="lead">Work Package Lead in Horizon Europe, con una formazione in Digital Humanities e New Media Art. Candidatura come Project &amp; International Relations Manager per Cityopensource.</p>
+      <div class="hero-actions">
+        <a class="btn btn-solid" href="#mappa"><svg aria-hidden="true"><use href="#i-map"/></svg>Esplora la mappa</a>
+        <a class="btn btn-line" href="assets/Giusy_Grieco_CV.pdf" download><svg aria-hidden="true"><use href="#i-download"/></svg>Scarica il CV</a>
+      </div>
+
+      <figure class="pipeline" aria-label="Il mio metodo in quattro passaggi: dati, storie, mappe, progetti">
+        <div class="steps">
+          <svg class="route" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true"><path d="M125 50 C 220 5, 280 95, 375 50 S 530 5, 625 50 S 780 95, 875 50"/></svg>
+          <div class="step"><span class="node"><svg aria-hidden="true"><use href="#i-data"/></svg></span><b>Dati</b><span>Fieldwork in 4 regioni europee, un dataset open in JSON, notebook Python.</span></div>
+          <div class="step"><span class="node"><svg aria-hidden="true"><use href="#i-story"/></svg></span><b>Storie</b><span>Ricerca tradotta per pubblici non specialistici, da Berlino a D4.1.</span></div>
+          <div class="step"><span class="node"><svg aria-hidden="true"><use href="#i-map"/></svg></span><b>Mappe</b><span>Attori in quadrupla elica, architettura dell’informazione, citizen science.</span></div>
+          <div class="step"><span class="node node-end"><svg aria-hidden="true"><use href="#i-flag"/></svg></span><b>Progetti</b><span>Un Work Package guidato fino alla consegna e al reporting UE.</span></div>
+        </div>
+      </figure>
+    </div>
+  </main>
+</div>
+
+<!-- ============ MAP ============ -->
+<section id="mappa" class="band">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Il percorso, su una mappa</h2>
+      <p class="lead">Sette luoghi, tre colori. Tocca un punto sulla mappa o un nome qui sotto per leggere la sua storia.</p>
+    </div>
+    <div class="map-grid">
+      <div id="map" role="region" aria-label="Mappa interattiva dei luoghi del percorso">
+        <p class="map-fallback">La mappa non si è caricata: usa i nomi dei luoghi qui sotto.</p>
+      </div>
+      <article class="story" id="story" aria-live="polite"></article>
+    </div>
+    <div class="legend" aria-label="Legenda">
+      <span><i class="dot k-eu"></i>Progetti europei</span>
+      <span><i class="dot k-comm"></i>Comunità e partecipazione</span>
+      <span><i class="dot k-root"></i>Radici e formazione</span>
+    </div>
+    <div class="place-list" id="placeList" role="group" aria-label="Luoghi"></div>
+  </div>
+</section>
+
+<!-- ============ PROJECT MANAGEMENT ============ -->
+<section id="progetti">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Project management, dal 2021</h2>
+      <p class="lead">Tre progetti europei, un Work Package guidato, due proposte seguite in fase di ideazione.</p>
+    </div>
+
+    <div class="gantt" role="img" aria-label="Linea del tempo: IN-HABIT 2021-2022, PERCEIVE 2022-2023, consulenza 2023-2025, KALEIDOS 2024-2026, Neverhack dal 2025">
+      <div class="g-row g-head"><div></div><div class="g-years"><span>2021</span><span>2022</span><span>2023</span><span>2024</span><span>2025</span><span>2026</span></div></div>
+      <div class="g-row"><div class="g-name"><b>IN-HABIT</b><small>Information Architect, Horizon 2020</small></div><div class="g-track"><span class="g-bar" style="left:11.1%;width:16.7%;background:var(--route)"></span></div></div>
+      <div class="g-row"><div class="g-name"><b>PERCEIVE</b><small>Researcher, Horizon Europe</small></div><div class="g-track"><span class="g-bar" style="left:16.7%;width:20.8%;background:var(--route)"></span></div></div>
+      <div class="g-row"><div class="g-name"><b>Consulenza</b><small>Mentoring proposte Horizon Europe</small></div><div class="g-track"><span class="g-bar" style="left:33.3%;width:50%;background:var(--highlight)"></span></div></div>
+      <div class="g-row"><div class="g-name"><b>KALEIDOS</b><small>Work Package 4 Lead, Horizon Europe</small></div><div class="g-track"><span class="g-bar" style="left:55.6%;width:36.1%;background:var(--ink)"></span></div></div>
+      <div class="g-row"><div class="g-name"><b>Neverhack Italy</b><small>IGA Specialist</small></div><div class="g-track"><span class="g-bar" style="left:76.4%;width:19.4%;background:var(--contour)"></span></div></div>
+    </div>
+
+    <h3 style="margin-top:64px">Come ho guidato il Work Package 4 di KALEIDOS</h3>
+    <div class="wp">
+      <div class="wp-step">
+        <div class="ico"><svg aria-hidden="true"><use href="#i-people"/></svg></div>
+        <b>Coordinare</b>
+        <div class="dots" role="img" aria-label="9 partner"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <p>9 partner in una Coordination and Support Action Horizon Europe.</p>
+      </div>
+      <div class="wp-step">
+        <div class="ico"><svg aria-hidden="true"><use href="#i-pin"/></svg></div>
+        <b>Andare sul campo</b>
+        <div class="dots" role="img" aria-label="4 regioni"><i></i><i></i><i></i><i></i></div>
+        <p>Interviste e fieldwork in quadrupla elica in 4 regioni europee.</p>
+      </div>
+      <div class="wp-step">
+        <div class="ico"><svg aria-hidden="true"><use href="#i-doc"/></svg></div>
+        <b>Scrivere</b>
+        <div class="dots" role="img" aria-label="1 deliverable"><i></i></div>
+        <p>D4.1, sola autrice principale, pubblicato open access.</p>
+      </div>
+      <div class="wp-step">
+        <div class="ico"><svg aria-hidden="true"><use href="#i-flag"/></svg></div>
+        <b>Consegnare</b>
+        <div class="dots" role="img" aria-label="consegnato"><i style="background:var(--highlight)"></i></div>
+        <p>Deliverable nei tempi, reporting alla Commissione, supporto alla rendicontazione.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHAT I BRING ============ -->
+<section style="background:var(--paper-2)">
+  <div class="wrap">
+    <div class="section-head"><h2>Cosa porto a Cityopensource</h2></div>
+    <div class="bring">
+      <div class="bring-card">
+        <svg class="ico" aria-hidden="true" style="color:var(--route)"><use href="#i-flag"/></svg>
+        <h3>Progettazione europea</h3>
+        <p>Horizon Europe e Horizon 2020 vissuti dall’interno: monitoraggio dei bandi, workshop di co-design in fase di ideazione, gestione fino alla consegna.</p>
+      </div>
+      <div class="bring-card">
+        <svg class="ico" aria-hidden="true" style="color:var(--route)"><use href="#i-globe"/></svg>
+        <h3>Relazioni internazionali</h3>
+        <p>Consorzi di 9 e 11 partner, lavoro tra Bologna, Berlino e Lucerna, in cinque lingue.</p>
+        <div class="cefr" role="img" aria-label="Lingue: italiano madrelingua, inglese C2, spagnolo C1, francese B2, tedesco B2">
+          <div class="cefr-row"><span>Italiano</span><div class="cefr-bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div><b>L1</b></div>
+          <div class="cefr-row"><span>Inglese</span><div class="cefr-bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div><b>C2</b></div>
+          <div class="cefr-row"><span>Spagnolo</span><div class="cefr-bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div><b>C1</b></div>
+          <div class="cefr-row"><span>Francese</span><div class="cefr-bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div><b>B2</b></div>
+          <div class="cefr-row"><span>Tedesco</span><div class="cefr-bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div><b>B2</b></div>
+        </div>
+      </div>
+      <div class="bring-card">
+        <svg class="ico" aria-hidden="true" style="color:var(--route)"><use href="#i-open"/></svg>
+        <h3>Digital commons</h3>
+        <p>Un deliverable open access, un toolkit open source e un dataset pubblico: le stesse logiche di condivisione e riuso delle vostre mappe.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ OUTPUTS ============ -->
+<section id="output">
+  <div class="wrap">
+    <div class="section-head"><h2>Output aperti</h2></div>
+    <div class="outs">
+      <a class="out" href="https://doi.org/10.5281/zenodo.17909495" target="_blank" rel="noopener"><svg aria-hidden="true" style="color:var(--route)"><use href="#i-doc"/></svg><span><b>KALEIDOS D4.1: Open Science and Knowledge Valorisation</b><small>Sola autrice principale, DOI 10.5281/zenodo.17909495</small></span></a>
+      <a class="out" href="https://github.com/teragramgius/horizon-europe-knowledge-valorisation-toolkit" target="_blank" rel="noopener"><svg aria-hidden="true" style="color:var(--route)"><use href="#i-code"/></svg><span><b>Horizon Europe Knowledge Valorisation Toolkit</b><small>Template, rubric e indicatori open source</small></span></a>
+      <a class="out" href="https://github.com/teragramgius/eu-ai-governance-tracker" target="_blank" rel="noopener"><svg aria-hidden="true" style="color:var(--route)"><use href="#i-data"/></svg><span><b>EU AI Governance Tracker</b><small>Dataset JSON e notebook Python sui framework regolatori UE</small></span></a>
+      <a class="out" href="https://doi.org/10.5281/zenodo.10458408" target="_blank" rel="noopener"><svg aria-hidden="true" style="color:var(--route)"><use href="#i-doc"/></svg><span><b>Adaptive Horizons (PERCEIVE)</b><small>Co-autrice, DOI 10.5281/zenodo.10458408</small></span></a>
+      <a class="out" href="https://teragramgius.github.io/horizon/" target="_blank" rel="noopener"><svg aria-hidden="true" style="color:var(--route)"><use href="#i-map"/></svg><span><b>Track record Horizon Europe</b><small>Matrice interattiva delle competenze</small></span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CV DOWNLOAD ============ -->
+<section id="cv" style="padding-top:0">
+  <div class="wrap">
+    <div class="cv">
+      <div>
+        <h2>Il CV, in una pagina</h2>
+        <p>Esperienze, progetti europei, pubblicazioni e competenze. Formato PDF, in italiano.</p>
+        <div class="cv-actions">
+          <a class="btn btn-solid" href="assets/Giusy_Grieco_CV.pdf" download><svg aria-hidden="true"><use href="#i-download"/></svg>Scarica il CV (PDF)</a>
+          <a class="btn btn-line" href="assets/Giusy_Grieco_CV.pdf" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-eye"/></svg>Apri nel browser</a>
+        </div>
+      </div>
+      <div class="cv-doc" aria-hidden="true"><i class="h"></i><i></i><i></i><i class="b"></i><i></i><i></i><i></i><i class="b"></i><i></i><i></i></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <h2>Parliamone, anche a Napoli.</h2>
+    <div class="contacts">
+      <a href="mailto:giusygrieco@proton.me"><svg aria-hidden="true"><use href="#i-mail"/></svg>giusygrieco@proton.me</a>
+      <a href="tel:+393396187260"><svg aria-hidden="true"><use href="#i-phone"/></svg>+39 339 618 7260</a>
+      <a href="https://linkedin.com/in/giusy-grieco-101612202" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-link"/></svg>LinkedIn</a>
+      <a href="https://github.com/teragramgius" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-code"/></svg>GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function () {
+  const KIND = {
+    eu:   { label: 'Progetto europeo',        color: '#2F5BEA', text: '#FFFFFF' },
+    comm: { label: 'Comunità e partecipazione', color: '#F2C230', text: '#14213D' },
+    root: { label: 'Radici e formazione',     color: '#5E8C6A', text: '#FFFFFF' }
+  };
+  const PLACES = [
+    { id: 'bologna', name: 'Bologna', kind: 'eu', lat: 44.49, lon: 11.34,
+      when: 'KALEIDOS, Horizon Europe, 05/2024 – 07/2026',
+      body: 'Work Package 4 Lead all’Università di Bologna, in un consorzio di 9 partner. Ho disegnato la ricerca, coordinato i partner nel fieldwork in quattro regioni europee e firmato come sola autrice principale il deliverable D4.1 sulla valorizzazione della conoscenza. Qui ho anche studiato Digital Humanities.',
+      tags: ['Work Package Lead', 'quadrupla elica', 'open science'] },
+    { id: 'berlino', name: 'Berlino', kind: 'eu', lat: 52.52, lon: 13.40,
+      when: 'IN-HABIT, Horizon 2020, 09/2021 – 09/2022',
+      body: 'Information Architect del WP5 con Tesseræ Urban Social Research. Ho progettato l’architettura dell’informazione del work package e tradotto la ricerca su innovazione e rigenerazione urbana in materiali per pubblici ampi e non specialistici.',
+      tags: ['rigenerazione urbana', 'information architecture', 'storytelling'] },
+    { id: 'lucerna', name: 'Lucerna', kind: 'eu', lat: 47.05, lon: 8.31,
+      when: 'PERCEIVE, Horizon Europe, 2022 – 04/2023',
+      body: 'Researcher alla Hochschule Luzern in un consorzio di 11 partner coordinato da CNR ISPC: interpretabilità e autenticità delle ricostruzioni del colore generate da AI nel patrimonio culturale. Co-autrice di Adaptive Horizons.',
+      tags: ['patrimonio culturale', 'AI', 'consorzio internazionale'] },
+    { id: 'zakopane', name: 'Zakopane', kind: 'comm', lat: 49.30, lon: 19.95,
+      when: 'Erasmus+, 2022',
+      body: 'Youth Leader e facilitazione visuale in un progetto Erasmus+: rendere visibile il pensiero di un gruppo internazionale mentre prende forma.',
+      tags: ['Erasmus+', 'facilitazione visuale'] },
+    { id: 'procida', name: 'Procida', kind: 'comm', lat: 40.76, lon: 14.02,
+      when: 'STOPTIGRE, citizen science',
+      body: 'Facilitazione di un progetto di citizen science: cittadini che raccolgono dati sul proprio territorio.',
+      tags: ['citizen science', 'dati dal territorio'] },
+    { id: 'sannicandro', name: 'Sannicandro di Bari', kind: 'comm', lat: 41.00, lon: 16.80,
+      when: 'XYZ con La Scuola Open Source',
+      body: 'Design partecipativo nel progetto XYZ, sulla sconsacrazione della sagra: una comunità che ripensa un proprio rito.',
+      tags: ['design partecipativo', 'open source', 'comunità'] },
+    { id: 'napoli', name: 'Napoli', kind: 'root', lat: 40.85, lon: 14.25,
+      when: 'Accademia di Belle Arti di Napoli',
+      body: 'Qui mi sono formata in New Media Art: il punto da cui nasce il mio modo di trasformare contenuti in immagini e racconti.',
+      tags: ['New Media Art', 'formazione'] },
+    { id: 'oliveto', name: 'Oliveto Citra ed Eboli', kind: 'root', lat: 40.69, lon: 15.23,
+      when: 'Origine, mostra fotografica nel 2020',
+      body: 'Oliveto Citra è il paese da cui vengo. Alle Fornaci Romane di Eboli, nel 2020, ho esposto una mostra fotografica sull’immigrazione.',
+      tags: ['territorio', 'fotografia'] }
+  ];
+
+  const storyEl = document.getElementById('story');
+  const listEl = document.getElementById('placeList');
+  const markers = {};
+  let map = null;
+
+  function esc(s) { return s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+  function pinIcon(p, active) {
+    return L.divIcon({
+      className: '',
+      html: '<span class="pin' + (active ? ' is-active' : '') + '" style="display:block;background:' + KIND[p.kind].color + '"></span>',
+      iconSize: active ? [34, 34] : [26, 26],
+      iconAnchor: active ? [17, 17] : [13, 13]
+    });
+  }
+
+  function show(id, fly) {
+    const p = PLACES.find(x => x.id === id) || PLACES[0];
+    const k = KIND[p.kind];
+    storyEl.innerHTML =
+      '<span class="story-kind" style="background:' + k.color + ';color:' + k.text + '">' + esc(k.label) + '</span>' +
+      '<h3>' + esc(p.name) + '</h3>' +
+      '<p class="when">' + esc(p.when) + '</p>' +
+      '<p>' + esc(p.body) + '</p>' +
+      '<div class="tags">' + p.tags.map(t => '<span>' + esc(t) + '</span>').join('') + '</div>';
+    listEl.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === p.id)));
+    if (map) {
+      PLACES.forEach(x => markers[x.id] && markers[x.id].setIcon(pinIcon(x, x.id === p.id)));
+      if (fly) {
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        map.flyTo([p.lat, p.lon], 6, { duration: reduce ? 0 : 1.1 });
+      }
+    }
+  }
+
+  PLACES.forEach(p => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.id = p.id;
+    b.textContent = p.name;
+    b.addEventListener('click', () => show(p.id, true));
+    listEl.appendChild(b);
+  });
+
+  if (window.L) {
+    document.querySelector('.map-fallback').remove();
+    map = L.map('map', { scrollWheelZoom: false, zoomControl: true, attributionControl: true });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 12,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    }).addTo(map);
+    PLACES.forEach(p => {
+      markers[p.id] = L.marker([p.lat, p.lon], { icon: pinIcon(p, false), title: p.name, keyboard: true })
+        .addTo(map)
+        .on('click', () => show(p.id, false));
+    });
+    map.fitBounds(L.latLngBounds(PLACES.map(p => [p.lat, p.lon])), { padding: [40, 40] });
+  }
+
+  show('bologna', false);
+})();
+</script>
+</body>
+</html>
